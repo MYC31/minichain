@@ -50,6 +50,12 @@ public class SpvPeer {
         String localMerkleRootHash = headers.get(height).getMerkleRootHash();
         String remoteMerkleRootHash = proof.getMerkleRootHash();
 
+        System.out.println("\n----------> verify hash:\t" + txHash);
+        System.out.println("calMerkleRootHash:\t\t" + hash);
+        System.out.println("localMerkleRootHash:\t" + localMerkleRootHash);
+        System.out.println("remoteMerkleRootHash:\t" + remoteMerkleRootHash);
+        System.out.println();
+
         return hash.equals(localMerkleRootHash) && hash.equals(remoteMerkleRootHash);
     }
 

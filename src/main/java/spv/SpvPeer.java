@@ -27,7 +27,7 @@ public class SpvPeer {
         verifyLatest();
     }
 
-    public boolean simplifiedPaymentVerify(Transaction transaction) {
+    public int simplifiedPaymentVerify(Transaction transaction) {
         String txHash = SecurityUtil.sha256Digest(transaction.toString());
 
         MinerPeer minerPeer = network.getMinerPeer();
@@ -37,7 +37,7 @@ public class SpvPeer {
         System.out.println("simplifiedPaymentVerify hit line 36.\n");
 
         if (proof == null) {
-            return false;
+            return 1;
         }
 
         /* debug code */
@@ -48,7 +48,7 @@ public class SpvPeer {
             switch (node.getOrientation()) {
                 case LEFT: hash = SecurityUtil.sha256Digest(node.getTxHash() + hash); break;
                 case RIGHT: hash = SecurityUtil.sha256Digest(hash + node.getTxHash()); break;
-                default: return false;
+                default: return 2;
             }
         }
 
@@ -65,7 +65,7 @@ public class SpvPeer {
         System.out.println("remoteMerkleRootHash:\t" + remoteMerkleRootHash);
         System.out.println();
 
-        return hash.equals(localMerkleRootHash) && hash.equals(remoteMerkleRootHash);
+        return hash.equals(localMerkleRootHash) && hash.equals(remoteMerkleRootHash) ? 0:3;
     }
 
     public void verifyLatest() {
@@ -76,8 +76,9 @@ public class SpvPeer {
 
         System.out.println("Account[" + account.getWalletAddress() + "] began to verify the transaction...");
         for (Transaction transaction : transactions) {
-            if (!simplifiedPaymentVerify(transaction)) {
-                System.out.println("verification failed!");
+            int err;
+            if ((err = simplifiedPaymentVerify(transaction)) != 0) {
+                System.out.println("verification failed! Error code = " + err);
                 System.exit(-1);
             }
         }

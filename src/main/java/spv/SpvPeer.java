@@ -33,9 +33,15 @@ public class SpvPeer {
         MinerPeer minerPeer = network.getMinerPeer();
         Proof proof = minerPeer.getProof(txHash);
 
+        /* debug code */
+        System.out.println("simplifiedPaymentVerify hit line 36.\n");
+
         if (proof == null) {
             return false;
         }
+
+        /* debug code */
+        System.out.println("simplifiedPaymentVerify hit line 42.\n");
 
         String hash = proof.getTxHash();
         for (Proof.Node node : proof.getPath()) {
@@ -45,6 +51,9 @@ public class SpvPeer {
                 default: return false;
             }
         }
+
+        /* debug code */
+        System.out.println("simplifiedPaymentVerify hit line 53.\n");
 
         int height = proof.getHeight();
         String localMerkleRootHash = headers.get(height).getMerkleRootHash();

@@ -223,7 +223,7 @@ public class MinerPeer extends Thread {
                     proofPath.add(proofNode);
                     pathHash = parentHash;
                 } else if (pathHash.equals(rightHash)) {
-                    Proof.Node proofNode = new Proof.Node(rightHash, Proof.Orientation.LEFT);
+                    Proof.Node proofNode = new Proof.Node(leftHash, Proof.Orientation.LEFT);
                     proofPath.add(proofNode);
                     pathHash = parentHash;
                 }

@@ -2,7 +2,6 @@ package network;
 
 import config.MiniChainConfig;
 import consensus.MinerPeer;
-import consensus.TransactionProducer;
 import data.*;
 import spv.SpvPeer;
 import utils.SecurityUtil;

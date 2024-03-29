@@ -236,10 +236,8 @@ public class MinerPeer extends Thread {
     }
 
     public void broadcast(Block block) {
-        SpvPeer[] spvPeers = network.getSpvPeers();
-        for (SpvPeer spvPeer : spvPeers) {
-            spvPeer.accept(block.getBlockHeader());
-        }
+        SpvPeer spvPeer = network.getSpvPeer();
+        spvPeer.accept(block.getBlockHeader());
     }
 
 }

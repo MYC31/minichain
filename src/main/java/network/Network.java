@@ -21,10 +21,11 @@ import java.util.Random;
  */
 public class Network {
 
-    private final Account[] accounts;
-    private final SpvPeer[] spvPeers;
+    private final List<Account> accounts = new ArrayList<>();
+    private final SpvPeer spvPeer;
+//    private final SpvPeer[] spvPeers;
     private final TransactionPool transactionPool;
-    private final TransactionProducer transactionProducer;
+//    private final TransactionProducer transactionProducer;
     private final BlockChain blockChain;
     private final MinerPeer minerPeer;
 
@@ -35,22 +36,20 @@ public class Network {
 
         // 初始化用户和spv节点, 并注册到网络中
         System.out.println("\naccounts and spvPeers config...");
-        accounts = new Account[MiniChainConfig.ACCOUNT_NUM];
-        spvPeers = new SpvPeer[MiniChainConfig.ACCOUNT_NUM];
         for (int i = 0; i < MiniChainConfig.ACCOUNT_NUM; ++i) {
-            accounts[i] = new Account();
-            System.out.println("network register new account: " + accounts[i]);
+            accounts.add(new Account());
+            System.out.println("network register new account: " + accounts.get(i));
             // 每个账户创建一个spv轻节点， 并获得与网络的连接
-            spvPeers[i] = new SpvPeer(accounts[i], this);
         }
 
         // 创建交易池，网络中会有交易涌入
         System.out.println("\ntransactionPool config...");
         transactionPool = new TransactionPool(MiniChainConfig.MAX_TRANSACTION_COUNT);
 
-        // 交易生产者，负责生产交易，维持与网络的连接
-        System.out.println("\ntransactionProducer config...");
-        transactionProducer = new TransactionProducer(this);
+//        // 交易生产者，负责生产交易，维持与网络的连接
+//        System.out.println("\ntransactionProducer config...");
+//        transactionProducer = new TransactionProducer(this);
+        spvPeer = new SpvPeer(null, this);
 
         // 初始化一条区块链，后续由矿工节点维护，可当作这条链在网络中存储于矿工节点
         System.out.println("\nblockChain config...");
@@ -74,9 +73,9 @@ public class Network {
     public void theyHaveADayDream() {
 
         // 在创世区块中为每个账户分配一定金额的 utxo，便于后面交易的进行
-        UTXO[] outUtxos = new UTXO[accounts.length];
-        for (int i = 0;  i < accounts.length; ++i) {
-            outUtxos[i] = new UTXO(accounts[i].getWalletAddress(), MiniChainConfig.INIT_AMOUNT, accounts[i].getPublicKey());
+        UTXO[] outUtxos = new UTXO[accounts.size()];
+        for (int i = 0;  i < accounts.size(); ++i) {
+            outUtxos[i] = new UTXO(accounts.get(i).getWalletAddress(), MiniChainConfig.INIT_AMOUNT, accounts.get(i).getPublicKey());
         }
         // 神秘的公私钥
         KeyPair dayDreamKeyPair = SecurityUtil.secp256k1Generate();
@@ -108,8 +107,8 @@ public class Network {
      * 启动挖矿线程和生成随机交易的线程
      */
     public void start() {
-        transactionProducer.start();
         minerPeer.start();
+        spvPeer.start();
     }
 
     public BlockChain getBlockChain() {
@@ -124,15 +123,15 @@ public class Network {
         return transactionPool;
     }
 
-    public TransactionProducer getTransactionProducer() {
-        return transactionProducer;
-    }
+//    public TransactionProducer getTransactionProducer() {
+//        return transactionProducer;
+//    }
 
-    public Account[] getAccounts() {
+    public List<Account> getAccounts() {
         return accounts;
     }
 
-    public SpvPeer[] getSpvPeers() {return spvPeers;}
+    public SpvPeer getSpvPeer() {return spvPeer;}
 
     public List<Transaction> getTransactionsInLatestBlock(String walletAddress) {
         List<Transaction> list = new ArrayList<>();
@@ -159,5 +158,30 @@ public class Network {
         return list;
     }
 
+    public Account create_account() {
+        Account account = new Account();
+        accounts.add(account);
+        UTXO[] outUtxos = new UTXO[1];
+        outUtxos[0] = new UTXO(account.getWalletAddress(), MiniChainConfig.INIT_AMOUNT, account.getPublicKey());
+
+        KeyPair dayDreamKeyPair = SecurityUtil.secp256k1Generate();
+        PublicKey dayDreamPublicKey = dayDreamKeyPair.getPublic();
+        PrivateKey dayDreamPrivateKey = dayDreamKeyPair.getPrivate();
+
+        byte[] sign = SecurityUtil.signature("Everything in the dream!".getBytes(StandardCharsets.UTF_8), dayDreamPrivateKey);
+        Transaction transaction = new Transaction(new UTXO[]{}, outUtxos, sign, dayDreamPublicKey, System.currentTimeMillis());
+        Transaction[] transactions = { transaction };
+
+        String preBlockHash = SecurityUtil.sha256Digest(blockChain.getLatestBlock().toString());
+        String merkleRootHash = SecurityUtil.sha256Digest(transaction.toString());
+
+        BlockHeader blockHeader = new BlockHeader(preBlockHash, merkleRootHash, Math.abs(new Random().nextLong()));
+        BlockBody blockBody = new BlockBody(merkleRootHash, transactions);
+        Block block = new Block(blockHeader, blockBody);
+
+        blockChain.addNewBlock(block);
+        minerPeer.broadcast(block);
+        return account;
+    }
 
 }

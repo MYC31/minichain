@@ -3,10 +3,7 @@ package data;
 import network.Network;
 import utils.SecurityUtil;
 
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 区块链的类抽象，创建该对象时会自动生成创世纪块，加入区块链中
@@ -89,11 +86,11 @@ public class BlockChain {
 
 
     public int getAllAccountAmount() {
-        Account[] accounts = network.getAccounts();
+        List<Account> accounts = network.getAccounts();
         int sumAmount = 0;
-        for (int i = 0; i < accounts.length; ++i) {
-            UTXO[] trueUtxo = getTrueUtxos(accounts[i].getWalletAddress());
-            sumAmount += accounts[i].getAmount(trueUtxo);
+        for (int i = 0; i < accounts.size(); ++i) {
+            UTXO[] trueUtxo = getTrueUtxos(accounts.get(i).getWalletAddress());
+            sumAmount += accounts.get(i).getAmount(trueUtxo);
         }
         return sumAmount;
     }

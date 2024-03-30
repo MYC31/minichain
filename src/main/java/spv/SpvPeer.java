@@ -99,7 +99,11 @@ public class SpvPeer extends Thread {
 
     public void accept(BlockHeader blockHeader) {
         headers.add(blockHeader);
-        verifyLatest();
+        try {
+            verifyLatest();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
     }
 
     public int simplifiedPaymentVerify(String txHash) {

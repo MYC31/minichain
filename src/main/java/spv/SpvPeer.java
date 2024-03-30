@@ -1,6 +1,5 @@
 package spv;
 
-import com.sun.tools.jdeprscan.scan.Scan;
 import consensus.MinerPeer;
 import data.*;
 import network.Network;
@@ -41,6 +40,7 @@ public class SpvPeer extends Thread {
                     String str = scan.nextLine();
                     if (str.equals("create an account")) {
                         account = network.create_account();
+                        account.notifyAll();
                         System.out.println("create successfully! account is " + account.getWalletAddress());
                     } else {
                         System.out.println("You enter wrong.");
@@ -143,8 +143,15 @@ public class SpvPeer extends Thread {
         return hash.equals(localMerkleRootHash) && hash.equals(remoteMerkleRootHash) ? 0:3;
     }
 
-    public void verifyLatest() {
-        List<Transaction> transactions = network.getTransactionsInLatestBlock(account.getWalletAddress());
+    public void verifyLatest() throws InterruptedException {
+        /**
+         * null pointer exception here!!!
+         **/
+        List<Transaction> transactions = null;
+        while (account == null) {
+            account.wait();
+            transactions = network.getTransactionsInLatestBlock(account.getWalletAddress());
+        }
         if (transactions.isEmpty()) {
             return;
         }
